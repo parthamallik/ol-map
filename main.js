@@ -175,21 +175,54 @@ var coordinates = [
 
 
 var aid = [
-  [77.736183, 12.919204], // 4 km
-  [77.776916, 12.911674], // 9 km
-  [77.82325, 12.894633], // 14.7 km
-  [77.826518, 12.901095], // 16 km
-  [77.8163, 12.93515], // 20.4
-  [77.804259, 12.951332], // 24.km
-  [77.7848, 12.935627], // 28.2 km
-  [77.777191, 12.910722], // 31 km
-  [77.764322, 12.905359], // 33 km
-  [77.756916, 12.882096], // 35.9 km
-  [77.743987, 12.861141], // 38.8 km
-  [77.732595, 12.861153], // 40.2 km
-  [77.732606, 12.861149], // 43 km
-  [77.69711, 12.8837], // 46.5 km
-  [77.701236, 12.894834] // 48.2 km
+  {
+    'distance': 4,
+    'latlog': [77.736183, 12.919204] // 4 km
+  },
+  {
+    'distance': 9,
+    'latlog': [77.776916, 12.911674]// 9 km
+  }, {
+    'distance': 14.7,
+    'latlog': [77.82325, 12.894633] // 14.7 km
+  }, {
+    'distance': 16,
+    'latlog': [77.826518, 12.901095] // 16 km
+  }, {
+    'distance': 20.4,
+    'latlog': [77.8163, 12.93515] // 20.4 km
+  }, {
+    'distance': 24.4,
+    'latlog': [77.804259, 12.951332] // 24.4 km
+  }, {
+    'distance': 28.2,
+    'latlog': [77.7848, 12.935627] // 28.2 km
+  }, {
+    'distance': 31,
+    'latlog': [77.777191, 12.910722] // 31 km
+  }, {
+    'distance': 33,
+    'latlog': [77.764322, 12.905359], // 33 km
+  }, {
+    'distance': 35.9,
+    'latlog': [77.756916, 12.882096], // 35.9 km
+  }, {
+    'distance': 38.8,
+    'latlog': [77.743987, 12.861141], // 38.8 km
+  }, {
+    'distance': 40.2,
+    'latlog': [77.732595, 12.861153], // 40.2 km
+  }, {
+    'distance': 43,
+    'latlog': [77.732606, 12.861149], // 43 km
+  }, {
+    'distance': 46.5,
+    'latlog': [77.69711, 12.8837], // 46.5 km
+  },
+  {
+    'distance': 48.2,
+    'latlog': [77.701236, 12.894834] // 48.2 km
+  }
 ]
 
 
@@ -233,16 +266,32 @@ var markerFeature = null;
 document.getElementById("select").addEventListener("change", (e) => {
   var val = document.getElementById("select").value;
   let splits = val.split(' | ');
-  let runner = runners.filter(r => r.NAME === splits[0])[0];
-  console.log(runner);
+  let runner = runners.filter(r => r.NAME === splits[0]);
 
-  if (markerFeature) vectorSource.removeFeature(markerFeature);
-  if (nameplateFeature) vectorSource.removeFeature(nameplateFeature);
+  if (runner.length > 0) {
+    runner = runner[0];
+    console.log(runner);
+    if (markerFeature) {
+      vectorSource.removeFeature(markerFeature);
+      markerFeature = null;
+    }
+    if (nameplateFeature) {
+      vectorSource.removeFeature(nameplateFeature);
+      nameplateFeature = null;
+    }
 
-  markerFeature = utils.createFeature(aid[runner.MARK], styles.icon);
-  nameplateFeature = utils.createFeature([77.785188, 12.883112], styles.rectangle(`${runner.NAME}\nBIB: ${runner.BIB}\nCrossed: ${runner.MARK} mark`));
-
+    let exptime = getExpTime(aid[runner.MARK].distance, runner.TIME);
+    if (runner.MARK) markerFeature = utils.createFeature(aid[runner.MARK].latlog, styles.icon);
+    nameplateFeature = utils.createFeature([77.785188, 12.883112], styles.rectangle(`${runner.NAME}\nBIB: ${runner.BIB}\nCrossed: ${aid[runner.MARK].distance} km\n ETA: ${exptime} HRS`));
+  }
 });
+
+var getExpTime = (km, t) => {
+  let sT = Date.parse(`Wed Oct 31 2021 4:30:00 GMT+0530 (India Standard Time)`);
+  let cT = Date.parse(`Wed Oct 31 2021 ${t}:00 GMT+0530 (India Standard Time)`);
+  let expT = ((cT-sT) / km) * 50;
+  return (new Date(sT+expT)).toLocaleString().split(', ')[1];
+}
 
 var runners = [];
 utils.gettiming().then(function (d) {
@@ -254,4 +303,4 @@ utils.gettiming().then(function (d) {
   });
 });
 
-utils.createFeature([77.7048069,12.9065275], styles.icon2);
+utils.createFeature([77.7048069, 12.9065275], styles.icon2);
