@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Mapbox Vector Tiles</title>
+  <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+  <script src="https://unpkg.com/elm-pep"></script>
+  <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
+  <script
+    src="https://cdn.polyfill.io/v3/polyfill.min.js?features=fetch,requestAnimationFrame,Element.prototype.classList,URL,TextDecoder,Number.isInteger"></script>
+  <script src="https://openlayers.org/en/v6.8.1/examples/resources/mapbox-streets-v6-style.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <style>
+    #map {
+      width: 100%;
+      height: 700px;
+      margin: 0;
+    }
+
+    #map {
+      position: absolute;
+      z-index: 5;
+    }
+
+    #msg {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      transform: translate(-50%, 5px);
+      background-color: rgba(40, 40, 40, .8);
+      padding: 10px;
+      color: #eee;
+      width: 350px;
+      height: 80px;
+      text-align: center;
+    }
+
+    .ol-control button {
+      background-color: rgba(40, 40, 40, 0.85) !important;
+    }
+
+    .ol-control button:hover {
+      background-color: rgba(40, 40, 40, 1) !important;
+    }
+  </style>
+  <script src="./main.js" type="module"></script>
+</head>
+
+<body>
+  <div>
+    <h2 style="text-align: center;">Spot a runner !!</h2>
+    <input list="runners" name="select" id="select" class="form-control" placeholder="Type Runner's Name or BIB" style="height: 50px;">
+    <datalist id="runners">
+    </datalist>
+  </div>
+  <div id="map"></div>
+
+</body>
+
+</html>

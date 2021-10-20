@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css"
+          type="text/css">
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+</head>
+
+<body>
+<div id="map" class="map"></div>
+
+<script>
+    var view = new ol.View({
+        center: ol.proj.fromLonLat([10, 50]),
+        zoom: 14
+    })
+
+    //Dummy coords
+    var coordinates = [
+        ol.proj.fromLonLat([10, 50]),
+        ol.proj.fromLonLat([11, 51]),
+        ol.proj.fromLonLat([12, 55])
+    ];
+
+    var layerLines = new ol.layer.Vector({
+        source: new ol.source.Vector({
+            features: [new ol.Feature({
+                geometry: new ol.geom.LineString(coordinates),
+                name: 'Line'
+            })]
+        }),
+        style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#ff0000',
+                width: 3
+            })
+        })
+    });
+
+    var map = new ol.Map({
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            })
+        ],
+        view: view
+    });
+
+    map.addLayer(layerLines);
+</script>
+
+</body>
+</html>
