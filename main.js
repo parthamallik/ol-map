@@ -14,6 +14,9 @@ import { Icon, Stroke, Style, Text, RegularShape } from 'ol/style';
 import LineString from 'ol/geom/LineString';
 import Fill from 'ol/style/Fill';
 import Text from 'ol/style/Text';
+import Overlay from 'ol/Overlay';
+
+import { distances, coordinates, aid_stations } from './route-info.js'
 
 
 var vectorSource = new VectorSource(),
@@ -93,8 +96,9 @@ var utils = {
     });
   },
 
-  createFeature: function (coord, style) {
+  createFeature: function (coord, style, name) {
     var feature = new Feature({
+      name: name,
       type: 'place',
       geometry: new Point(fromLonLat(coord))
     });
@@ -124,116 +128,18 @@ var utils = {
   }
 };
 
-var geom = [
-  "gywmAqxgyMiKuAmJ}B}EqCsBuCgD_`@pCkH{IwEuJkOGkClA}I_AqFj@gC]eKaIsEsAiCiEkr@_BeEDaEmIJfAuLa@iGfAuCFsF",
-  "wnzmAw}nyMpDeg@lFqa@\\uSvAqPtFw\\nBsClEoC",
-  "mlymAsusyMHYV{CL}Cb@}B|@}CdGgP~DcENi@VkAl@cGZ}A@q@_@sC",
-  "awxmAmuuyMq@_Bu@WMMEiCR}DTeAdDqFx@{B`@_Cx@cHf@cDd@cG",
-  "imxmA{kwyMhAuL|AyHg@{Db@gJtDaFl@kE[oMb@s@rA[d@kB`BkBj@cC~EwBpOqQfQog@",
-  "wnvmAs|{yM`BuBxIiHfJ_G~BwQl@gB~AkChAwDAoAe@_BgCcDEiDPq@^}SZ_BzB_GFo@Uu@oEgEkA_BeB}K",
-  "wvumAq|_zMaY|Ksb@Pi`@xEqOdGoHFcDbDqYo@yNwDgEM{CxAwO}A",
-  "e{{mAob_zMgFjJeDlKVfImMtBw@jAwHhEsZ`KuHc@{EbAkI?wNyBmNjBgBjD",
-  "yy_nAab}yMMhBj@lALhBs@nCeDdEe@bAwDc@YZaApEaFgAaANuHdE}DtCgDlD",
-  "aganAiw{yMYZVp@l@tDF~ACrBIVTF",
-  "eeanAqg{yMjKdB~Mv@Cd@bOXfFEPL",
-  "_r_nAk`{yMLFCtBYf@[nDeAzBi@ZC^j@x@Az@WxAAhBeBhI",
-  "uy_nAy{yyM|Js@vSs@lALpDvA~Er@",
-  "_j~mAgzyyMe@xGc@pD[xJAvE",
-  "gm~mAiyxyMADp@`@bDJDV[vDJt@x@d@Px@@bAO`C?z@jAh@Cv@Pb@nBH",
-  "u~}mA}_xyMInAPf@`AfAHf@KpEeAtCt@EjA\\tCRhD~@tDDx@i@nDE|@WrBR",
-  "_~|mAokwyMdBL~AOnDXXLJRJ~BPN~BhAlFdDrE`BxEtB\\I@P",
-  "{dymAq|uyM`Fv@v@\\h@FLLt@VfEgAfBIf@VdAnAdA\\zC`@t@\\",
-  "}bxmAytuyM[v@o@jEs@RBzA\\N_@zBSl@",
-  "ogxmAkcuyM@bA`ArA~BfBr@jEx@V|@xB`ALtBKt@n@k@|BeAXSb@]rBVzB|@`TjBr@pE`AfCbAlYvE",
-  "knvmA{_syMtF`P|Qt@tHSjGn@hM[hIh@~JjC~DnBrAUdDv@fOrF",
-  "__smAg{qyMrGzArIfFhETtGbCtAzA_@|F`@xGrF`GbRdDbKpGbNfEvV|J`NjD",
-  "e}nmAikoyMDt@_@pFB~BLVvAf@Jv@jB`A\\fBkAbJQbDhCjAN\\]rFaAjAkA`EkBpK",
-  "{|nmAydmyMQhA?|BnAhULdEMdGtApSPpROXA~DHjAbBzBaAbG?pB\\vCbBtG|DbBPn@UvAPXfDAYtD",
-  "_hnmAw}hyMjEh@uJ`Pu@dEmFzGcUv@{LrCeSjGcNhI_Q`AwJxHyNdGyLrA}OpE",
-  "ajsmA_ffyMsEdBsBb@mCUmG\\_BPkB|@eDIq@NkAx@_EE_A`@",
-  "uxtmAa|eyMY]Hm@EMiA[cCwCQa@G_@Hc@xAwEE_@Yk@gI_EyBg@IODY[a@c@wAe@aAGF",
-  "cpumA__gyM`BsGv@uF^gBpAoBmByA",
-  "ekumA{xgyMuBU}RmFiCAaKpAiH?",
-  "o|vmAo~gyM[DqBnEmCzE_@M",
-  "kfwmAkqgyMyOqE"
-];
+const element = document.getElementById('popup');
 
+const popup = new Overlay({
+  element: element,
+  positioning: 'bottom-center',
+  stopEvent: false,
+});
+map.addOverlay(popup);
 
-var coordinates = [
-  fromLonLat([77.781695, 12.926608]),
-  fromLonLat([77.781591, 12.926517]),
-  fromLonLat([77.781218, 12.925225]),
-  fromLonLat([77.779325, 12.921577]),
-  fromLonLat([77.778735, 12.920305]),
-  fromLonLat([77.777723, 12.917529]),
-  fromLonLat([77.777852, 12.917294]),
-  fromLonLat([77.777674, 12.916155]),
-  fromLonLat([77.777433, 12.91482]),
-  fromLonLat([77.777636, 12.914807]),
-  fromLonLat([77.777535, 12.913592])
-];
-
-
-var aid = [
-  {
-    'distance': 4,
-    'latlog': [77.736183, 12.919204] // 4 km
-  },
-  {
-    'distance': 9,
-    'latlog': [77.776916, 12.911674]// 9 km
-  }, {
-    'distance': 14.7,
-    'latlog': [77.82325, 12.894633] // 14.7 km
-  }, {
-    'distance': 16,
-    'latlog': [77.826518, 12.901095] // 16 km
-  }, {
-    'distance': 20.4,
-    'latlog': [77.8163, 12.93515] // 20.4 km
-  }, {
-    'distance': 24.4,
-    'latlog': [77.804259, 12.951332] // 24.4 km
-  }, {
-    'distance': 28.2,
-    'latlog': [77.7848, 12.935627] // 28.2 km
-  }, {
-    'distance': 31,
-    'latlog': [77.777191, 12.910722] // 31 km
-  }, {
-    'distance': 33,
-    'latlog': [77.764322, 12.905359], // 33 km
-  }, {
-    'distance': 35.9,
-    'latlog': [77.756916, 12.882096], // 35.9 km
-  }, {
-    'distance': 38.8,
-    'latlog': [77.743987, 12.861141], // 38.8 km
-  }, {
-    'distance': 40.2,
-    'latlog': [77.732595, 12.861153], // 40.2 km
-  }, {
-    'distance': 43,
-    'latlog': [77.732606, 12.861149], // 43 km
-  }, {
-    'distance': 46.5,
-    'latlog': [77.69711, 12.8837], // 46.5 km
-  },
-  {
-    'distance': 48.2,
-    'latlog': [77.701236, 12.894834] // 48.2 km
-  }
-]
-
-
-// Create the mixed map
-for (let x = 0; x < geom.length; x++) {
-  utils.createRoute(geom[x]);
-}
-
-// create the remaining
+// create the route
 let lines = new Feature({
-  geometry: new LineString(coordinates),
+  geometry: new LineString(coordinates.map(c => fromLonLat(c))),
   name: 'Line',
 });
 
@@ -261,7 +167,6 @@ function csvJSON(csv) {
   return result;
 }
 
-var nameplateFeature = null;
 var markerFeature = null;
 document.getElementById("select").addEventListener("change", (e) => {
   var val = document.getElementById("select").value;
@@ -275,22 +180,17 @@ document.getElementById("select").addEventListener("change", (e) => {
       vectorSource.removeFeature(markerFeature);
       markerFeature = null;
     }
-    if (nameplateFeature) {
-      vectorSource.removeFeature(nameplateFeature);
-      nameplateFeature = null;
-    }
 
-    let exptime = getExpTime(aid[runner.MARK].distance, runner.TIME);
-    if (runner.MARK) markerFeature = utils.createFeature(aid[runner.MARK].latlog, styles.icon);
-    nameplateFeature = utils.createFeature([77.785188, 12.883112], styles.rectangle(`${runner.NAME}\nBIB: ${runner.BIB}\nCrossed: ${aid[runner.MARK].distance} km\n ETA: ${exptime} HRS`));
+    $(element).popover('dispose');
+    if (runner.MARK) markerFeature = utils.createFeature(coordinates[aid_stations[runner.MARK]], styles.icon, runner.BIB);
   }
 });
 
 var getExpTime = (km, t) => {
   let sT = Date.parse(`Wed Oct 31 2021 4:30:00 GMT+0530 (India Standard Time)`);
   let cT = Date.parse(`Wed Oct 31 2021 ${t}:00 GMT+0530 (India Standard Time)`);
-  let expT = ((cT-sT) / km) * 50;
-  return (new Date(sT+expT)).toLocaleString().split(', ')[1];
+  let expT = ((cT - sT) / km) * 50000;
+  return (new Date(sT + expT)).toLocaleString().split(', ')[1];
 }
 
 var runners = [];
@@ -303,4 +203,28 @@ utils.gettiming().then(function (d) {
   });
 });
 
-utils.createFeature([77.7048069, 12.9065275], styles.icon2);
+utils.createFeature([77.7048069, 12.9065275], styles.icon2, 'Startpoint');
+
+map.on('click', function (evt) {
+  const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+    return feature;
+  });
+  if (feature && feature.get('name') && feature.get('name').startsWith('B42SE')) {
+    popup.setPosition(evt.coordinate);
+    let runner = feature.get('name') ? runners.filter(r => r.BIB === feature.get('name')) : null;
+    if (runner && runner.length > 0) runner = runner[0];
+
+    let name = runner.NAME,
+      distance = distances[aid_stations[runner.MARK]] / 1000,
+      exptime = getExpTime(distances[aid_stations[runner.MARK]], runner.TIME);
+
+    $(element).popover({
+      placement: 'top',
+      html: true,
+      content: `<div>${name}</div><div> Distance: ${Math.round(distance * 100) / 100} km</div><div>ETA: ${exptime} HRS</div>`
+    });
+    $(element).popover('show');
+  } else {
+    $(element).popover('dispose');
+  }
+});
