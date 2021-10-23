@@ -16,7 +16,7 @@ import Fill from 'ol/style/Fill';
 import Text from 'ol/style/Text';
 import Overlay from 'ol/Overlay';
 
-import { distances, coordinates, aid_stations } from './route-info.js'
+import { distances, coordinates, aid_stations, getLatLongFromDistance } from './route-info.js'
 
 
 var vectorSource = new VectorSource(),
@@ -167,23 +167,41 @@ function csvJSON(csv) {
   return result;
 }
 
-var markerFeature = null;
+let getPrediction = (runner) => {
+  if(runner.TIME && runner.MARK) {
+    let sT = Date.parse(`Wed Oct 23 2021 4:30:00 GMT+0530 (India Standard Time)`); // start time
+    let eT = Date.parse(`Wed Oct 23 2021 ${runner.TIME}:00 GMT+0530 (India Standard Time)`); // elapsed time
+    let d_p = ( distances[aid_stations[runner.MARK]] / (eT-sT) ) * (Date.now()  - sT); // distance_predicted
+    if(d_p > distances[aid_stations[Number(runner.MARK) + 1]]) { // if crossing next mark, keep it to 85-97% of it
+      d_p = (distances[aid_stations[Number(runner.MARK) + 1]] * Math.floor(Math.random() * (97 - 85 + 1) + 85)) / 100;
+    }
+    return getLatLongFromDistance (d_p); // get lat long for it
+  } else if(runner.MARK) { // time not captured.
+    coordinates[aid_stations[runner.MARK]]; // whichever is the last aid station marked
+  } else {
+    coordinates[0] // no MARK means, not started
+  }
+}
+
+
+var markerFeature = [];
 document.getElementById("select").addEventListener("change", (e) => {
   var val = document.getElementById("select").value;
   let splits = val.split(' | ');
   let runner = runners.filter(r => r.NAME === splits[0]);
 
-  if (runner.length > 0) {
-    runner = runner[0];
-    console.log(runner);
-    if (markerFeature) {
-      vectorSource.removeFeature(markerFeature);
-      markerFeature = null;
-    }
+  runner = (val === '- ALL -') ? runners : runner;
+  if(runner.length === 0) return;
 
-    $(element).popover('dispose');
-    if (runner.MARK) markerFeature = utils.createFeature(coordinates[aid_stations[runner.MARK]], styles.icon, runner.BIB);
-  }
+  markerFeature.forEach(m=> {
+    vectorSource.removeFeature(m);
+  })
+  markerFeature = [];
+  $(element).popover('dispose');
+  runner.forEach (r => {
+    //console.log(r);
+    if (r.MARK) markerFeature.push(utils.createFeature(getPrediction(r), styles.icon, r.BIB));
+  })
 });
 
 var getExpTime = (km, t) => {
@@ -197,6 +215,7 @@ var runners = [];
 utils.gettiming().then(function (d) {
   runners = csvJSON(d);
   var datalist = document.getElementById("runners");
+  datalist.innerHTML += `<option value="- ALL -"></option>`;
   runners.forEach(d => {
     // create the remaining
     datalist.innerHTML += `<option value="${d.NAME} | ${d.BIB}"></option>`;
