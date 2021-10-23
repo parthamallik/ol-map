@@ -158,7 +158,7 @@ function csvJSON(csv) {
     var currentline = lines[i].split(",");
 
     for (var j = 0; j < headers.length; j++) {
-      obj[headers[j]] = currentline[j];
+      obj[headers[j]] = currentline[j] ? currentline[j].replace('\r','') : undefined;
     }
 
     result.push(obj);
@@ -167,28 +167,35 @@ function csvJSON(csv) {
   return result;
 }
 
-let getPrediction = (runner, wantDistance) => {
+let getPrediction = (runner) => {
   if (runner.TIME && runner.MARK) {
     let sT = Date.parse(`Wed Oct 23 2021 4:30:00 GMT+0530 (India Standard Time)`); // start time
     let eT = Date.parse(`Wed Oct 23 2021 ${runner.TIME}:00 GMT+0530 (India Standard Time)`); // elapsed time
     let d_p = (distances[aid_stations[runner.MARK]] / (eT - sT)) * (Date.now() - sT); // distance_predicted
     if (d_p > distances[aid_stations[Number(runner.MARK) + 1]]) { // if crossing next mark, keep it to 85-97% of it
-      d_p = (distances[aid_stations[Number(runner.MARK) + 1]] * Math.floor(Math.random() * (97 - 85 + 1) + 85)) / 100;
+      d_p = distances[aid_stations[Number(runner.MARK) + 1]] - Math.floor(Math.random() * (500 - 100 + 1) + 100) ;
     }
 
-    if (wantDistance) return d_p;
-    return getLatLongFromDistance(d_p); // get lat long for it
+    return {
+      'distance' : d_p,
+      'latlong' : getLatLongFromDistance(d_p) // get lat long for it
+    }; 
   } else if (runner.MARK) { // time not captured.
-    if (wantDistance) return distances[aid_stations[runner.MARK]];
-    coordinates[aid_stations[runner.MARK]]; // whichever is the last aid station marked
+    return {
+      'distance': distances[aid_stations[runner.MARK]], // last aid station mark
+      'latlong': coordinates[aid_stations[runner.MARK]] // lat long of the last aid station
+    }
   } else {
-    if (wantDistance) return 0;
-    coordinates[0] // no MARK means, not started
+    return {
+      'distance' : 0,
+      'latlong' : coordinates[0] // no MARK means, not started
+    };
   }
 }
 
-
 var markerFeature = [];
+var markerPrediction = {};
+
 document.getElementById("select").addEventListener("change", (e) => {
   var val = document.getElementById("select").value;
   let splits = val.split(' | ');
@@ -204,7 +211,12 @@ document.getElementById("select").addEventListener("change", (e) => {
   $(element).popover('dispose');
   runner.forEach(r => {
     //console.log(r);
-    if (r.MARK) markerFeature.push(utils.createFeature(getPrediction(r), styles.icon, r.BIB));
+    if (r.MARK) {
+      let p = getPrediction(r);
+      let m = utils.createFeature(p.latlong, styles.icon, r.BIB);
+      markerFeature.push(m);
+      markerPrediction[r.BIB] = p.distance;
+    }
   })
 });
 
@@ -238,14 +250,14 @@ map.on('click', function (evt) {
     if (runner && runner.length > 0) runner = runner[0];
 
     let name = runner.NAME,
-      distance = getPrediction(runner, true) / 1000,
+      distance = markerPrediction[runner.BIB] / 1000,
       exptime = getExpTime(distances[aid_stations[runner.MARK]], runner.TIME);
 
     $(element).popover('dispose');
     $(element).popover({
       placement: 'top',
       html: true,
-      content: `<div>${name}</div><div> Distance: ${Math.round(distance * 100) / 100} km</div><div>ETA: ${exptime} HRS</div>`
+      content: `<div>${name}</div><div> Distance: ${Math.round(distance * 100) / 100} km</div><div>ETA: ${exptime ? exptime : 'N/A'} HRS</div>`
     });
     $(element).popover('show');
   } else {
