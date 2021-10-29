@@ -86,10 +86,10 @@ var map = new Map({
 });
 
 var utils = {
-  gettiming: function () {
+  gettiming: function (url) {
     return new Promise(function (resolve, reject) {
       //make sure the coord is on street
-      fetch('data/runners.csv').then(function (response) {
+      fetch(url? url:'data/runners.csv').then(function (response) {
         // Convert to JSON
         resolve(response.text());
       }).catch(function (e) { reject(e); });
@@ -139,7 +139,7 @@ map.addOverlay(popup);
 
 // create the route
 let lines = new Feature({
-  geometry: new LineString(coordinates.map(c => fromLonLat(c))),
+  geometry: new LineString(coordinates.map(c => fromLonLat([c[1], c[0]]))),
   name: 'Line',
 });
 
@@ -183,12 +183,12 @@ let getPrediction = (runner) => {
   } else if (runner.MARK) { // time not captured.
     return {
       'distance': distances[aid_stations[runner.MARK]], // last aid station mark
-      'latlong': coordinates[aid_stations[runner.MARK]] // lat long of the last aid station
+      'latlong': [ coordinates[aid_stations[runner.MARK]][1], coordinates[aid_stations[runner.MARK]][0] ]// lat long of the last aid station
     }
   } else {
     return {
       'distance' : 0,
-      'latlong' : coordinates[0] // no MARK means, not started
+      'latlong' : [coordinates[1], coordinates[0]] // no MARK means, not started
     };
   }
 }
