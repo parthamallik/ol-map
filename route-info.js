@@ -3142,7 +3142,7 @@ module.exports = {
 
     getLatLongFromDistance: (d) => {
         for (let i = 0; i < distances.length; i++) {
-            if (d < distances[i]) return coordinates[i];
+            if (d < distances[i]) return [coordinates[i][1], coordinates[i][0]];
         }
     }
 }

@@ -168,9 +168,9 @@ function csvJSON(csv) {
 }
 
 let getPrediction = (runner) => {
-  if (runner.TIME && runner.MARK) {
-    let sT = Date.parse(`Wed Oct 23 2021 4:30:00 GMT+0530 (India Standard Time)`); // start time
-    let eT = Date.parse(`Wed Oct 23 2021 ${runner.TIME}:00 GMT+0530 (India Standard Time)`); // elapsed time
+  if (runner.TIME && runner.MARK && runner.MARK != 17) {
+    let sT = Date.parse(`Sun Oct 31 2021 4:30:00 GMT+0530 (India Standard Time)`); // start time
+    let eT = Date.parse(`Sun Oct 31 2021 ${runner.TIME}:00 GMT+0530 (India Standard Time)`); // elapsed time
     let d_p = (distances[aid_stations[runner.MARK]] / (eT - sT)) * (Date.now() - sT); // distance_predicted
     if (d_p > distances[aid_stations[Number(runner.MARK) + 1]]) { // if crossing next mark, keep it to 85-97% of it
       d_p = distances[aid_stations[Number(runner.MARK) + 1]] - Math.floor(Math.random() * (500 - 100 + 1) + 100) ;
@@ -221,10 +221,20 @@ document.getElementById("select").addEventListener("change", (e) => {
 });
 
 var getExpTime = (km, t) => {
-  let sT = Date.parse(`Wed Oct 31 2021 4:30:00 GMT+0530 (India Standard Time)`);
-  let cT = Date.parse(`Wed Oct 31 2021 ${t}:00 GMT+0530 (India Standard Time)`);
+  let sT = Date.parse(`Sun Oct 31 2021 4:30:00 GMT+0530 (India Standard Time)`);
+  let cT = Date.parse(`Sun Oct 31 2021 ${t}:00 GMT+0530 (India Standard Time)`);
   let expT = ((cT - sT) / km) * 50000;
-  return (new Date(sT + expT)).toLocaleString().split(', ')[1];
+  return {
+    'eta': t ? (new Date(sT + expT)).toLocaleString(): null,
+    'timing': getHourAndMin(cT - sT)
+  };
+}
+
+var getHourAndMin = (milli) => {
+  let mins = ( milli / (1000 * 60) ) % 60;
+  let hours = Math.floor(milli / (1000 * 60 * 60));
+
+  return `${hours} HRS, ${mins} MINS`;
 }
 
 var runners = [];
@@ -251,13 +261,14 @@ map.on('click', function (evt) {
 
     let name = runner.NAME,
       distance = markerPrediction[runner.BIB] / 1000,
-      exptime = getExpTime(distances[aid_stations[runner.MARK]], runner.TIME);
+      exptime = getExpTime(distances[aid_stations[runner.MARK]], runner.TIME),
+      msg = runner.MARK == 17 ? `Finished in ${exptime.timing}` : `ETA: ${exptime.eta ? exptime.eta : 'N/A'}`;
 
     $(element).popover('dispose');
     $(element).popover({
       placement: 'top',
       html: true,
-      content: `<div>${name}</div><div> Distance: ${Math.round(distance * 100) / 100} km</div><div>ETA: ${exptime ? exptime : 'N/A'} HRS</div>`
+      content: `<div>${name}</div><div> Distance: ${Math.round(distance * 100) / 100} km</div><div>${msg}</div>`
     });
     $(element).popover('show');
   } else {
